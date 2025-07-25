@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avatar Video Call</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="screen active">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <h2>🎭 Подключение к аватару...</h2>
+                <p>Подождите, мы устанавливаем соединение</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <span id="loading-status">Инициализация...</span>
+            </div>
+        </div>
+
+        <!-- Call Incoming Screen -->
+        <div id="call-screen" class="screen">
+            <div class="call-content">
+                <div class="avatar-preview">
+                    <div class="avatar-image">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face" alt="Avatar" />
+                        <div class="call-animation"></div>
+                    </div>
+                    <h2>AI Ассистент</h2>
+                    <p>Входящий видеозвонок</p>
+                </div>
+                
+                <div class="call-actions">
+                    <button id="answer-btn" class="btn-answer">
+                        <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+                            <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+                        </svg>
+                        Ответить
+                    </button>
+                    <button id="decline-btn" class="btn-decline">
+                        <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+                            <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.69.28-.26 0-.51-.1-.71-.29-.39-.39-.39-1.02 0-1.41.87-.87 1.85-1.6 2.92-2.16C3.94 11.36 3 9.85 3 8.14 3 5.31 7.03 3 12 3s9 2.31 9 5.14c0 1.71-.94 3.22-2.7 3.85 1.07.56 2.05 1.29 2.92 2.16.39.39.39 1.02 0 1.41-.2.19-.45.29-.71.29-.26 0-.51-.1-.69-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.51-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
+                        </svg>
+                        Отклонить
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Call Screen -->
+        <div id="video-screen" class="screen">
+            <div class="video-container">
+                <video id="avatar-video" autoplay muted playsinline></video>
+                <div class="video-overlay">
+                    <div class="avatar-info">
+                        <div class="avatar-status">
+                            <span id="connection-status" class="status-indicator">●</span>
+                            <span>AI Ассистент</span>
+                        </div>
+                        <div class="call-duration" id="call-duration">00:00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <div class="input-section">
+                    <div class="input-group">
+                        <input type="text" id="message-input" placeholder="Введите сообщение..." />
+                        <button id="send-btn" class="control-btn">
+                            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="mic-btn" class="control-btn mic-btn">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+                        </svg>
+                    </button>
+                    <button id="end-call-btn" class="control-btn end-call-btn">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.69.28-.26 0-.51-.1-.71-.29-.39-.39-.39-1.02 0-1.41.87-.87 1.85-1.6 2.92-2.16C3.94 11.36 3 9.85 3 8.14 3 5.31 7.03 3 12 3s9 2.31 9 5.14c0 1.71-.94 3.22-2.7 3.85 1.07.56 2.05 1.29 2.92 2.16.39.39.39 1.02 0 1.41-.2.19-.45.29-.71.29-.26 0-.51-.1-.69-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.51-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Screen -->
+        <div id="error-screen" class="screen">
+            <div class="error-content">
+                <div class="error-icon">⚠️</div>
+                <h2>Ошибка подключения</h2>
+                <p id="error-message">Не удалось установить соединение с аватаром</p>
+                <button id="retry-btn" class="btn-retry">Попробовать снова</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="ringtone" loop>
+        <source src="data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAAGZGMPY=" type="audio/mpeg">
+    </audio>
+
+    <script src="app.js"></script>
+</body>
+</html>

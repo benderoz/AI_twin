@@ -1,0 +1,484 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: #000;
+    color: #fff;
+    overflow: hidden;
+    height: 100vh;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#app {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Screen Management */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.screen.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Loading Screen */
+#loading-screen {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.loading-content {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid #fff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 30px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-content h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.loading-content p {
+    font-size: 16px;
+    opacity: 0.8;
+    margin-bottom: 30px;
+}
+
+.progress-bar {
+    width: 200px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    margin: 0 auto 20px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #fff;
+    border-radius: 3px;
+    width: 0%;
+    animation: progress 3s ease-in-out;
+}
+
+@keyframes progress {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+}
+
+#loading-status {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+/* Call Incoming Screen */
+#call-screen {
+    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+}
+
+.call-content {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.avatar-preview {
+    margin-bottom: 60px;
+}
+
+.avatar-image {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 30px;
+}
+
+.avatar-image img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #fff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.call-animation {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.2);
+        opacity: 0;
+    }
+}
+
+.call-content h2 {
+    font-size: 28px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.call-content p {
+    font-size: 18px;
+    opacity: 0.8;
+}
+
+.call-actions {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+.btn-answer, .btn-decline {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.btn-answer {
+    background: #27ae60;
+}
+
+.btn-answer:hover {
+    background: #2ecc71;
+    transform: scale(1.1);
+}
+
+.btn-decline {
+    background: #e74c3c;
+}
+
+.btn-decline:hover {
+    background: #c0392b;
+    transform: scale(1.1);
+}
+
+/* Video Call Screen */
+#video-screen {
+    background: #000;
+    flex-direction: column;
+}
+
+.video-container {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#avatar-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #1a1a1a;
+}
+
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+    padding: 20px;
+    z-index: 10;
+}
+
+.avatar-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.avatar-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.status-indicator {
+    color: #27ae60;
+    font-size: 12px;
+    animation: blink 2s ease-in-out infinite;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+.call-duration {
+    font-size: 16px;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+/* Controls */
+.controls {
+    background: rgba(0, 0, 0, 0.9);
+    padding: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.input-section {
+    margin-bottom: 20px;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 25px;
+    padding: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#message-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    padding: 12px 20px;
+    outline: none;
+}
+
+#message-input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.control-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+.mic-btn {
+    background: #3498db;
+    width: 60px;
+    height: 60px;
+}
+
+.mic-btn:hover {
+    background: #2980b9;
+}
+
+.mic-btn.recording {
+    background: #e74c3c;
+    animation: pulse-red 1s ease-in-out infinite;
+}
+
+@keyframes pulse-red {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.end-call-btn {
+    background: #e74c3c;
+    width: 60px;
+    height: 60px;
+}
+
+.end-call-btn:hover {
+    background: #c0392b;
+}
+
+/* Error Screen */
+#error-screen {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.error-content {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.error-icon {
+    font-size: 60px;
+    margin-bottom: 20px;
+}
+
+.error-content h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.error-content p {
+    font-size: 16px;
+    opacity: 0.8;
+    margin-bottom: 30px;
+}
+
+.btn-retry {
+    background: #fff;
+    color: #e74c3c;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-retry:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .call-actions {
+        gap: 20px;
+    }
+    
+    .btn-answer, .btn-decline {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .action-buttons {
+        gap: 20px;
+    }
+    
+    .mic-btn, .end-call-btn {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .controls {
+        padding: 15px;
+    }
+    
+    .avatar-image {
+        width: 120px;
+        height: 120px;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.screen.active {
+    animation: fadeIn 0.5s ease;
+}
+
+/* Telegram Web App specific styles */
+.tg-viewport {
+    height: 100vh;
+}
+
+/* Touch feedback */
+.control-btn:active, .btn-answer:active, .btn-decline:active, .btn-retry:active {
+    transform: scale(0.95);
+}
+
+/* Loading states */
+.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid transparent;
+    border-top: 2px solid #fff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
