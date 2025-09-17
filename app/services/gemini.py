@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import logging
+
 import google.generativeai as genai
 
 from ..config import settings
 
+
+logger = logging.getLogger(__name__)
 
 genai.configure(api_key=settings.gemini_api_key)
 
@@ -18,10 +22,14 @@ def build_prompt(last_amount: float, category: str, monthly_total: float, humor_
 
 
 def generate_dark_humor_line(last_amount: float, category: str, monthly_total: float) -> str:
-	model = genai.GenerativeModel("gemini-1.5-flash")
-	prompt = build_prompt(last_amount, category, monthly_total)
-	resp = model.generate_content(prompt)
-	text = (resp.text or "").strip()
-	if not text:
-		text = "Алкаши ебаные, хватит пить — эти деньги могли стать штангой получше."
-	return text
+	try:
+		model = genai.GenerativeModel("gemini-1.5-flash")
+		prompt = build_prompt(last_amount, category, monthly_total)
+		resp = model.generate_content(prompt)
+		text = (getattr(resp, "text", None) or "").strip()
+		if not text:
+			text = "Алкаши ебаные, хватит пить — эти деньги могли стать штангой получше."
+		return text
+	except Exception as e:
+		logger.warning("Gemini error: %s", e)
+		return "Алкаши ебаные, хватит пить — эти деньги могли стать штангой получше."
