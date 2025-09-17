@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import ssl
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Sequence, Tuple
 
 from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Numeric, String, Text, func, select
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -34,7 +35,11 @@ _Session: async_sessionmaker[AsyncSession] | None = None
 def get_engine() -> AsyncEngine:
 	global _engine, _Session
 	if _engine is None:
-		_engine = create_async_engine(_to_asyncpg_url(settings.database_url), echo=False, pool_pre_ping=True)
+		# Force SSL for Supabase/managed Postgres (safe for most hosts)
+		connect_args = {"ssl": True}
+		_engine = create_async_engine(
+			_to_asyncpg_url(settings.database_url), echo=False, pool_pre_ping=True, connect_args=connect_args
+		)
 		_Session = async_sessionmaker(_engine, expire_on_commit=False)
 	return _engine
 
@@ -52,7 +57,7 @@ def get_sessionmaker() -> async_sessionmaker[AsyncSession]:
 class User(Base):
 	__tablename__ = "users"
 
-	id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=func.gen_random_uuid())
+	id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 	tg_user_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
 	username: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 	created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -63,7 +68,7 @@ class User(Base):
 class Chat(Base):
 	__tablename__ = "chats"
 
-	id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=func.gen_random_uuid())
+	id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 	tg_chat_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
 	title: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 	created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -74,9 +79,9 @@ class Chat(Base):
 class Expense(Base):
 	__tablename__ = "expenses"
 
-	id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, server_default=func.gen_random_uuid())
-	chat_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("chats.id", ondelete="CASCADE"))
-	user_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("users.id", ondelete="CASCADE"))
+	id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+	chat_id: Mapped[str] = mapped_column(String(36), ForeignKey("chats.id", ondelete="CASCADE"))
+	user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"))
 	amount: Mapped[float] = mapped_column(Numeric(12, 2))
 	category: Mapped[str] = mapped_column(String(64))
 	description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -95,8 +100,6 @@ class Expense(Base):
 async def init_db() -> None:
 	engine = get_engine()
 	async with engine.begin() as conn:
-		# Enable pgcrypto for gen_random_uuid if not exists
-		await conn.execute(func.set_config("search_path", "public", False))
 		await conn.run_sync(Base.metadata.create_all)
 
 

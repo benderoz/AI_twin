@@ -11,6 +11,7 @@ from .config import settings, validate_settings
 from .db import init_db, get_sessionmaker, ensure_user_and_chat, add_expense, totals_for_range, month_bounds, delete_last_user_expense
 from .utils.parsing import parse_expense
 from .services.gemini import generate_dark_humor_line
+from .services.image import make_collage
 
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(message)s")
@@ -37,12 +38,27 @@ def _now_utc() -> datetime:
 	return datetime.now(timezone.utc)
 
 
-@dp.message(F.text.regexp(r"^(?=.*\d)"))
-async def handle_freeform_expense(message: Message) -> None:
+async def _fetch_avatar(bot: Bot, user_id: int):
+	try:
+		photos = await bot.get_user_profile_photos(user_id=user_id, limit=1)
+		if photos.total_count and photos.photos and photos.photos[0]:
+			# take the largest size
+			file_id = photos.photos[0][-1].file_id
+			file = await bot.get_file(file_id)
+			buf = await bot.download_file(file.file_path)
+			from PIL import Image
+
+			return Image.open(buf)
+	except Exception:
+		return None
+	return None
+
+
+@dp.message(F.text)
+async def handle_any_text(message: Message) -> None:
 	parsed = parse_expense(message.text or "")
 	if not parsed:
-		await message.reply("Не смог распознать сумму. Пример: 1200 алкоголь вино.")
-		return
+		return  # silently ignore non-expense text
 
 	Session = get_sessionmaker()
 	async with Session() as session:
@@ -51,7 +67,7 @@ async def handle_freeform_expense(message: Message) -> None:
 			tg_user_id=message.from_user.id,
 			username=message.from_user.username,
 			tg_chat_id=message.chat.id,
-			chat_title=message.chat.title,
+			chat_title=getattr(message.chat, "title", None),
 		)
 		await add_expense(session, chat, user, parsed.amount, parsed.category, parsed.description)
 		await session.commit()
@@ -62,13 +78,31 @@ async def handle_freeform_expense(message: Message) -> None:
 		totals = await totals_for_range(session, chat, start, end)
 
 	line = generate_dark_humor_line(parsed.amount, parsed.category, totals.sum_total)
-
 	desc_part = f" — {parsed.description}" if parsed.description else ""
-	await message.reply(
+	caption = (
 		f"Записал: {parsed.amount:.2f} ₽, {parsed.category}{desc_part}.\n"
 		f"В этом месяце всего: {totals.sum_total:.2f} ₽.\n"
 		f"{line}"
 	)
+
+	# Try send collage
+	img_bytes = None
+	try:
+		from PIL import Image
+
+		me = await _fetch_avatar(aio_bot, message.from_user.id)  # type: ignore[arg-type]
+		peer_avatar = None
+		if message.chat.type in ("group", "supergroup") and message.reply_to_message and message.reply_to_message.from_user:
+			peer_avatar = await _fetch_avatar(aio_bot, message.reply_to_message.from_user.id)  # type: ignore[arg-type]
+		item_hint = "гантели/шлем/железо"
+		img_bytes = make_collage(me, peer_avatar, item_hint)
+	except Exception:
+		img_bytes = None
+
+	if img_bytes:
+		await message.reply_photo(photo=img_bytes, caption=caption)
+	else:
+		await message.reply(caption)
 
 
 async def _stats_reply(message: Message, since: datetime | None, until: datetime | None, title: str) -> None:
@@ -79,7 +113,7 @@ async def _stats_reply(message: Message, since: datetime | None, until: datetime
 			tg_user_id=message.from_user.id,
 			username=message.from_user.username,
 			tg_chat_id=message.chat.id,
-			chat_title=message.chat.title,
+			chat_title=getattr(message.chat, "title", None),
 		)
 		totals = await totals_for_range(session, chat, since, until)
 
@@ -130,7 +164,7 @@ async def cmd_undo(message: Message) -> None:
 			tg_user_id=message.from_user.id,
 			username=message.from_user.username,
 			tg_chat_id=message.chat.id,
-			chat_title=message.chat.title,
+			chat_title=getattr(message.chat, "title", None),
 		)
 		last = await delete_last_user_expense(session, chat, user)
 		await session.commit()
