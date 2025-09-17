@@ -196,7 +196,7 @@ def build_fastapi_app() -> "FastAPI":
 
 	@asynccontextmanager
 	async def lifespan(_app: "FastAPI"):
-		nonlocal aio_bot
+		global aio_bot
 		aio_bot = Bot(token=settings.telegram_bot_token)
 		await init_db()
 		yield

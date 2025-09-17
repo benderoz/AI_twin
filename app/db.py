@@ -5,7 +5,7 @@ import ssl
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Sequence, Tuple
+from typing import Optional, Tuple
 
 from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Numeric, String, Text, func, select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
@@ -62,7 +62,7 @@ class User(Base):
 	username: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 	created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-	expenses: Mapped[Sequence["Expense"]] = relationship(back_populates="user")
+	expenses: Mapped[list["Expense"]] = relationship(back_populates="user")
 
 
 class Chat(Base):
@@ -73,7 +73,7 @@ class Chat(Base):
 	title: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 	created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-	expenses: Mapped[Sequence["Expense"]] = relationship(back_populates="chat")
+	expenses: Mapped[list["Expense"]] = relationship(back_populates="chat")
 
 
 class Expense(Base):
